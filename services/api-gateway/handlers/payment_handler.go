@@ -10,20 +10,32 @@ import (
 	"ledgerflow/services/api-gateway/clients"
 )
 
-func CreatePayment(c *gin.Context) {
-	client := clients.NewPaymentClient()
+type CreatePaymentRequest struct {
+	UserID   string `json:"user_id" binding:"required"`
+	Amount   int64  `json:"amount" binding:"required"`
+	Currency string `json:"currency" binding:"required"`
+}
 
-	req := &pb.CreatePaymentRequest{
-		UserId:   "user1",
-		Amount:   "100",
-		Currency: "USD",
+func CreatePayment(c *gin.Context) {
+	var req CreatePaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	resp, err := client.CreatePayment(context.Background(), req)
+	client := clients.NewPaymentClient()
+
+	pbReq := &pb.CreatePaymentRequest{
+		UserId:   req.UserID,
+		Amount:   req.Amount,
+		Currency: req.Currency,
+	}
+
+	resp, err := client.CreatePayment(context.Background(), pbReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, resp)
+	c.JSON(http.StatusOK, resp)
 }

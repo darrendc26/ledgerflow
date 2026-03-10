@@ -1,40 +1,17 @@
 package main
 
 import (
-	"context"
-	"log"
-	"net"
-
-	pb "ledgerflow/proto/paymentpb"
-
-	"google.golang.org/grpc"
+	"ledgerflow/pkg/db"
+	"ledgerflow/services/payment-service/handler"
+	"ledgerflow/services/payment-service/repository"
+	"ledgerflow/services/payment-service/server"
+	"ledgerflow/services/payment-service/service"
 )
 
-type server struct {
-	pb.UnimplementedPaymentServiceServer
-}
-
-func (s *server) CreatePayment(ctx context.Context, req *pb.CreatePaymentRequest) (*pb.CreatePaymentResponse, error) {
-
-	log.Println("CreatePayment caled")
-
-	return &pb.CreatePaymentResponse{
-		PaymentId: "1234",
-		Status:    "success",
-	}, nil
-}
-
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	grpcServer := grpc.NewServer()
-
-	pb.RegisterPaymentServiceServer(grpcServer, &server{})
-
-	log.Println("Payment Service running on port 50051")
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	db.NewPostgresPool()
+	repo := repository.NewPaymentRepository(db.NewPostgresPool())
+	service := service.NewPaymentService(repo)
+	handler := handler.NewPaymentHandler(service)
+	server.StartGrpcServer(handler)
 }
