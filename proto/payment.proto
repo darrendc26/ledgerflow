@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "proto/paymentpb";
+
+service PaymentService {
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse);
+}
+
+message CreatePaymentRequest {
+  string user_id = 1;
+  int64 amount = 2;
+  string currency = 3;
+}
+
+message CreatePaymentResponse {
+  string payment_id = 1;
+  string status = 2;
+}
+
+message GetPaymentRequest {
+  string payment_id = 1;
+}
+
+message GetPaymentResponse {
+  string payment_id = 1;
+  string status = 2;
+  int64 amount = 3;
+}
