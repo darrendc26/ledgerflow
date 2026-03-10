@@ -16,14 +16,20 @@ type CreatePaymentRequest struct {
 	Currency string `json:"currency" binding:"required"`
 }
 
-func CreatePayment(c *gin.Context) {
+type PaymentHandler struct {
+	client *clients.PaymentClient
+}
+
+func NewPaymentHandler(client *clients.PaymentClient) *PaymentHandler {
+	return &PaymentHandler{client: client}
+}
+
+func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	var req CreatePaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	client := clients.NewPaymentClient()
 
 	pbReq := &pb.CreatePaymentRequest{
 		UserId:   req.UserID,
@@ -31,7 +37,7 @@ func CreatePayment(c *gin.Context) {
 		Currency: req.Currency,
 	}
 
-	resp, err := client.CreatePayment(context.Background(), pbReq)
+	resp, err := h.client.CreatePayment(context.Background(), pbReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

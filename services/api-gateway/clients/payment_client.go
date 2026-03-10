@@ -1,18 +1,36 @@
 package clients
 
 import (
-	"log"
+	"context"
 
 	pb "ledgerflow/proto/paymentpb"
 
 	"google.golang.org/grpc"
 )
 
-func NewPaymentClient() pb.PaymentServiceClient {
+type PaymentClient struct {
+	client pb.PaymentServiceClient
+	conn   *grpc.ClientConn
+}
+
+func NewPaymentClient() (*PaymentClient, error) {
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		return nil, err
 	}
 
-	return pb.NewPaymentServiceClient(conn)
+	client := pb.NewPaymentServiceClient(conn)
+
+	return &PaymentClient{client: client, conn: conn}, nil
+}
+
+func (p *PaymentClient) Close() error {
+	if p.conn != nil {
+		return p.conn.Close()
+	}
+	return nil
+}
+
+func (p *PaymentClient) CreatePayment(ctx context.Context, req *pb.CreatePaymentRequest, opts ...grpc.CallOption) (*pb.CreatePaymentResponse, error) {
+	return p.client.CreatePayment(ctx, req, opts...)
 }
