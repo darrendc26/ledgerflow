@@ -22,12 +22,13 @@ const (
 )
 
 type CreatePaymentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Amount        int64                  `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	Currency      string                 `protobuf:"bytes,3,opt,name=currency,proto3" json:"currency,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	SenderAccount   string                 `protobuf:"bytes,1,opt,name=sender_account,json=senderAccount,proto3" json:"sender_account,omitempty"`
+	ReceiverAccount string                 `protobuf:"bytes,2,opt,name=receiver_account,json=receiverAccount,proto3" json:"receiver_account,omitempty"`
+	Amount          int64                  `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Currency        string                 `protobuf:"bytes,4,opt,name=currency,proto3" json:"currency,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *CreatePaymentRequest) Reset() {
@@ -60,9 +61,16 @@ func (*CreatePaymentRequest) Descriptor() ([]byte, []int) {
 	return file_proto_payment_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CreatePaymentRequest) GetUserId() string {
+func (x *CreatePaymentRequest) GetSenderAccount() string {
 	if x != nil {
-		return x.UserId
+		return x.SenderAccount
+	}
+	return ""
+}
+
+func (x *CreatePaymentRequest) GetReceiverAccount() string {
+	if x != nil {
+		return x.ReceiverAccount
 	}
 	return ""
 }
@@ -241,11 +249,12 @@ var File_proto_payment_proto protoreflect.FileDescriptor
 
 const file_proto_payment_proto_rawDesc = "" +
 	"\n" +
-	"\x13proto/payment.proto\x12\apayment\"c\n" +
-	"\x14CreatePaymentRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\x03R\x06amount\x12\x1a\n" +
-	"\bcurrency\x18\x03 \x01(\tR\bcurrency\"N\n" +
+	"\x13proto/payment.proto\x12\apayment\"\x9c\x01\n" +
+	"\x14CreatePaymentRequest\x12%\n" +
+	"\x0esender_account\x18\x01 \x01(\tR\rsenderAccount\x12)\n" +
+	"\x10receiver_account\x18\x02 \x01(\tR\x0freceiverAccount\x12\x16\n" +
+	"\x06amount\x18\x03 \x01(\x03R\x06amount\x12\x1a\n" +
+	"\bcurrency\x18\x04 \x01(\tR\bcurrency\"N\n" +
 	"\x15CreatePaymentResponse\x12\x1d\n" +
 	"\n" +
 	"payment_id\x18\x01 \x01(\tR\tpaymentId\x12\x16\n" +

@@ -1,15 +1,23 @@
 package main
 
 import (
-	"ledgerflow/services/api-gateway/clients"
-	"ledgerflow/services/api-gateway/handlers"
-	"ledgerflow/services/api-gateway/routes"
 	"log"
 
 	"github.com/gin-gonic/gin"
+
+	"ledgerflow/pkg/db"
+	"ledgerflow/services/api-gateway/clients"
+	"ledgerflow/services/api-gateway/handlers"
+	"ledgerflow/services/api-gateway/routes"
 )
 
 func main() {
+
+	pool := db.NewPostgresPool()
+
+	accountHandler := handlers.NewAccountHandler(pool)
+	depositHandler := handlers.NewDepositHandler(pool)
+	// payment client
 	paymentClient, err := clients.NewPaymentClient()
 	if err != nil {
 		log.Fatalf("failed to initialize payment client: %v", err)
@@ -20,7 +28,7 @@ func main() {
 
 	r := gin.Default()
 
-	routes.RegisterRoutes(r, paymentHandler)
+	routes.RegisterRoutes(r, paymentHandler, accountHandler, depositHandler)
 
 	log.Println("Starting API Gateway on :8080")
 	r.Run(":8080")

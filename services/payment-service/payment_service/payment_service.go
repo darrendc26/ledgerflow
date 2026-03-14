@@ -17,13 +17,14 @@ func NewPaymentService(repository *repository.PaymentRepository) *PaymentService
 	}
 }
 
-func (s *PaymentService) CreatePayment(userID string, amount int64, currency string) (*model.Payment, error) {
+func (s *PaymentService) CreatePayment(senderAccount string, receiverAccount string, amount int64, currency string) (*model.Payment, error) {
 	payment := &model.Payment{
-		ID:       uuid.New().String(),
-		UserID:   userID,
-		Amount:   amount,
-		Currency: currency,
-		Status:   "created",
+		ID:              uuid.New().String(),
+		SenderAccount:   senderAccount,
+		ReceiverAccount: receiverAccount,
+		Amount:          amount,
+		Currency:        currency,
+		Status:          "created",
 	}
 	err := s.repository.CreatePayment(payment)
 	if err != nil {

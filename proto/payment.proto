@@ -10,9 +10,10 @@ service PaymentService {
 }
 
 message CreatePaymentRequest {
-  string user_id = 1;
-  int64 amount = 2;
-  string currency = 3;
+  string sender_account = 1;
+  string receiver_account = 2;
+  int64 amount = 3;
+  string currency = 4;
 }
 
 message CreatePaymentResponse {

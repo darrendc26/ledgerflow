@@ -2,26 +2,56 @@ package handler
 
 import (
 	"context"
+	"fmt"
+
+	"ledgerflow/proto/ledgerpb"
 	pb "ledgerflow/proto/paymentpb"
-	"ledgerflow/services/payment-service/service"
+
+	payment_service "ledgerflow/services/payment-service/payment_service"
 )
 
 type PaymentHandler struct {
 	pb.UnimplementedPaymentServiceServer
-	service *service.PaymentService
+	paymentService *payment_service.PaymentService
+	ledgerClient   ledgerpb.LedgerServiceClient
 }
 
-func NewPaymentHandler(service *service.PaymentService) *PaymentHandler {
+func NewPaymentHandler(
+	paymentService *payment_service.PaymentService,
+	ledgerClient ledgerpb.LedgerServiceClient,
+) *PaymentHandler {
 	return &PaymentHandler{
-		service: service,
+		paymentService: paymentService,
+		ledgerClient:   ledgerClient,
 	}
 }
 
-func (h *PaymentHandler) CreatePayment(ctx context.Context, req *pb.CreatePaymentRequest) (*pb.CreatePaymentResponse, error) {
-	payment, err := h.service.CreatePayment(req.UserId, req.Amount, req.Currency)
+func (h *PaymentHandler) CreatePayment(
+	ctx context.Context,
+	req *pb.CreatePaymentRequest,
+) (*pb.CreatePaymentResponse, error) {
+	ledgerResp, err := h.ledgerClient.Transfer(ctx, &ledgerpb.TransferRequest{
+		SenderAccount:   req.SenderAccount,
+		ReceiverAccount: req.ReceiverAccount,
+		Amount:          req.Amount,
+		ReferenceId:     "",
+	})
+
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(ledgerResp.Status)
+
+	payment, err := h.paymentService.CreatePayment(
+		req.SenderAccount,
+		req.ReceiverAccount,
+		req.Amount,
+		req.Currency,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pb.CreatePaymentResponse{
 		PaymentId: payment.ID,
 		Status:    payment.Status,

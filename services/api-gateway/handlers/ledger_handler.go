@@ -1,51 +1,52 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	pb "ledgerflow/proto/paymentpb"
+	pb "ledgerflow/proto/ledgerpb"
 	"ledgerflow/services/api-gateway/clients"
 )
 
-type CreatePaymentRequest struct {
+type TransferRequest struct {
 	SenderAccount   string `json:"sender_account" binding:"required"`
 	ReceiverAccount string `json:"receiver_account" binding:"required"`
 	Amount          int64  `json:"amount" binding:"required"`
-	Currency        string `json:"currency" binding:"required"`
+	ReferenceId     string `json:"reference_id" binding:"required"`
 }
 
-type PaymentHandler struct {
-	client *clients.PaymentClient
+type LedgerHandler struct {
+	client *clients.LedgerClient
 }
 
-func NewPaymentHandler(client *clients.PaymentClient) *PaymentHandler {
-	return &PaymentHandler{client: client}
+func NewLedgerHandler(client *clients.LedgerClient) *LedgerHandler {
+	return &LedgerHandler{client: client}
 }
 
-func (h *PaymentHandler) CreatePayment(c *gin.Context) {
-	var req CreatePaymentRequest
+func (h *LedgerHandler) Transfer(c *gin.Context) {
+	var req TransferRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	pbReq := &pb.CreatePaymentRequest{
+	pbReq := &pb.TransferRequest{
 		SenderAccount:   req.SenderAccount,
 		ReceiverAccount: req.ReceiverAccount,
 		Amount:          req.Amount,
-		Currency:        req.Currency,
+		ReferenceId:     req.ReferenceId,
 	}
 
-	resp, err := h.client.CreatePayment(c.Request.Context(), pbReq)
+	resp, err := h.client.Transfer(context.Background(), pbReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"payment_id": resp.PaymentId,
-		"status":     resp.Status,
+		"status":         resp.Status,
+		"transaction_id": resp.TransactionId,
 	})
 }

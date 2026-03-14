@@ -1,10 +1,10 @@
 package model
 
-type Payment struct {
-	ID              string
+type Ledger struct {
 	SenderAccount   string
 	ReceiverAccount string
 	Amount          int64
-	Currency        string
+	ReferenceID     string
+	TransactionID   string
 	Status          string
 }
