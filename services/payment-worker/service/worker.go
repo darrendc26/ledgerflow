@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"ledgerflow/infra/prometheus"
 	ledgerpb "ledgerflow/proto/ledgerpb"
 	"ledgerflow/services/payment-service/kafka"
 	service "ledgerflow/services/payment-service/payment_service"
@@ -40,6 +41,8 @@ func NewWorker(
 }
 
 func (w *Worker) Start() {
+	metrics := prometheus.NewPrometheus()
+	metrics.Start()
 	for {
 		msg, err := w.reader.ReadMessage(context.Background())
 		if err != nil {
@@ -97,11 +100,12 @@ func (w *Worker) Start() {
 			})
 
 			w.paymentService.UpdateStatus(event.PaymentID, "failed")
-
+			metrics.PaymentsFailed.Inc()
 			continue
 		}
 
 		err = w.paymentService.UpdateStatus(event.PaymentID, "completed")
+		metrics.PaymentsProcessed.Inc()
 		log.Println("Payment completed:", event.PaymentID)
 		if err != nil {
 			log.Println("Failed to update payment status:", err)
