@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	ledgerpb "ledgerflow/proto/ledgerpb"
 	"ledgerflow/services/payment-service/kafka"
@@ -16,9 +17,14 @@ type Worker struct {
 	reader         *kafkago.Reader
 	ledgerClient   ledgerpb.LedgerServiceClient
 	paymentService *service.PaymentService
+	producer       *kafka.Producer
 }
 
-func NewWorker(ledgerClient ledgerpb.LedgerServiceClient, paymentService *service.PaymentService) *Worker {
+func NewWorker(
+	ledgerClient ledgerpb.LedgerServiceClient,
+	paymentService *service.PaymentService,
+	producer *kafka.Producer,
+) *Worker {
 
 	reader := kafkago.NewReader(kafkago.ReaderConfig{
 		Brokers: []string{"localhost:9092"},
@@ -34,13 +40,11 @@ func NewWorker(ledgerClient ledgerpb.LedgerServiceClient, paymentService *servic
 }
 
 func (w *Worker) Start() {
-
 	for {
-
 		msg, err := w.reader.ReadMessage(context.Background())
 		if err != nil {
 			log.Println("Kafka read error:", err)
-			continue
+
 		}
 
 		var event kafka.PaymentEvent
@@ -48,7 +52,6 @@ func (w *Worker) Start() {
 		err = json.Unmarshal(msg.Value, &event)
 		if err != nil {
 			log.Println("JSON decode error:", err)
-			continue
 		}
 
 		log.Println("Processing payment:", event.PaymentID)
@@ -58,25 +61,50 @@ func (w *Worker) Start() {
 			log.Println("Payment not found:", err)
 			continue
 		}
-		log.Println("Payment status:", paymentStatus)
+		// log.Println("Payment status:", paymentStatus)
 		if paymentStatus != "created" {
 			log.Println("Payment already processed:", event.PaymentID)
-			continue
+			break
 		}
 
-		_, err = w.ledgerClient.Transfer(context.Background(), &ledgerpb.TransferRequest{
-			SenderAccount:   event.SenderAccount,
-			ReceiverAccount: event.ReceiverAccount,
-			Amount:          event.Amount,
-			ReferenceId:     event.PaymentID,
-		})
+		for i := 0; i < 3; i++ {
+
+			_, err = w.ledgerClient.Transfer(context.Background(), &ledgerpb.TransferRequest{
+				SenderAccount:   event.SenderAccount,
+				ReceiverAccount: event.ReceiverAccount,
+				Amount:          event.Amount,
+				ReferenceId:     event.PaymentID,
+			})
+
+			if err == nil {
+				break
+			}
+
+			log.Println("Retry attempt", i+1, "failed:", err)
+
+			time.Sleep(2 * time.Second)
+		}
 
 		if err != nil {
-			log.Println("Ledger transfer failed:", err)
+			log.Println("Payment failed:", err)
+			log.Println("Sending to DLQ")
+
+			w.producer.PublishDLQ(&kafka.PaymentEvent{
+				PaymentID:       event.PaymentID,
+				SenderAccount:   event.SenderAccount,
+				ReceiverAccount: event.ReceiverAccount,
+				Amount:          event.Amount,
+			})
+
 			w.paymentService.UpdateStatus(event.PaymentID, "failed")
+
 			continue
 		}
-		w.paymentService.UpdateStatus(event.PaymentID, "completed")
+
+		err = w.paymentService.UpdateStatus(event.PaymentID, "completed")
 		log.Println("Payment completed:", event.PaymentID)
+		if err != nil {
+			log.Println("Failed to update payment status:", err)
+		}
 	}
 }
