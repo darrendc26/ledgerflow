@@ -34,3 +34,37 @@ func (r *PaymentRepository) CreatePayment(payment *model.Payment) error {
 
 	return err
 }
+
+func (r *PaymentRepository) UpdateStatus(id string, status string) error {
+
+	query := `UPDATE payments SET status = $1 WHERE id = $2`
+
+	_, err := r.db.Exec(context.Background(),
+		query,
+		status,
+		id,
+	)
+
+	return err
+}
+
+func (r *PaymentRepository) GetPendingPayment(paymentID string) (string, error) {
+
+	query := `
+		SELECT status
+		FROM payments
+		WHERE id=$1
+	`
+
+	err := r.db.QueryRow(
+		context.Background(),
+		query,
+		paymentID,
+	).Scan(&paymentID)
+
+	if err != nil {
+		return "", err
+	}
+
+	return paymentID, nil
+}

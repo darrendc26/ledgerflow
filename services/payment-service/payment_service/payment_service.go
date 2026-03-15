@@ -32,3 +32,15 @@ func (s *PaymentService) CreatePayment(senderAccount string, receiverAccount str
 	}
 	return payment, nil
 }
+
+func (s *PaymentService) UpdateStatus(paymentID string, status string) error {
+	return s.repository.UpdateStatus(paymentID, status)
+}
+
+func (s *PaymentService) GetPendingPayment(paymentID string) (string, error) {
+	paymentID, err := s.repository.GetPendingPayment(paymentID)
+	if err != nil {
+		return "", err
+	}
+	return paymentID, nil
+}

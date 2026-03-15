@@ -2,8 +2,8 @@ package main
 
 import (
 	"ledgerflow/pkg/db"
-	"ledgerflow/services/api-gateway/clients"
 	"ledgerflow/services/payment-service/handler"
+	"ledgerflow/services/payment-service/kafka"
 	payment_service "ledgerflow/services/payment-service/payment_service"
 	"ledgerflow/services/payment-service/repository"
 	"ledgerflow/services/payment-service/server"
@@ -14,9 +14,10 @@ func main() {
 	repo := repository.NewPaymentRepository(db.NewPostgresPool())
 	service := payment_service.NewPaymentService(repo)
 
-	ledger_client, _ := clients.NewLedgerClient()
+	// ledger_client, _ := clients.NewLedgerClient()
 
-	handler := handler.NewPaymentHandler(service, ledger_client)
+	producer := kafka.NewProducer()
+	handler := handler.NewPaymentHandler(service, producer)
 
 	server.StartGrpcServer(handler)
 }

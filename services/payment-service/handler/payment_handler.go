@@ -2,27 +2,26 @@ package handler
 
 import (
 	"context"
-	"fmt"
 
-	"ledgerflow/proto/ledgerpb"
 	pb "ledgerflow/proto/paymentpb"
 
+	producer "ledgerflow/services/payment-service/kafka"
 	payment_service "ledgerflow/services/payment-service/payment_service"
 )
 
 type PaymentHandler struct {
 	pb.UnimplementedPaymentServiceServer
 	paymentService *payment_service.PaymentService
-	ledgerClient   ledgerpb.LedgerServiceClient
+	producer       *producer.Producer
 }
 
 func NewPaymentHandler(
 	paymentService *payment_service.PaymentService,
-	ledgerClient ledgerpb.LedgerServiceClient,
+	producer *producer.Producer,
 ) *PaymentHandler {
 	return &PaymentHandler{
 		paymentService: paymentService,
-		ledgerClient:   ledgerClient,
+		producer:       producer,
 	}
 }
 
@@ -30,17 +29,6 @@ func (h *PaymentHandler) CreatePayment(
 	ctx context.Context,
 	req *pb.CreatePaymentRequest,
 ) (*pb.CreatePaymentResponse, error) {
-	ledgerResp, err := h.ledgerClient.Transfer(ctx, &ledgerpb.TransferRequest{
-		SenderAccount:   req.SenderAccount,
-		ReceiverAccount: req.ReceiverAccount,
-		Amount:          req.Amount,
-		ReferenceId:     "",
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(ledgerResp.Status)
 
 	payment, err := h.paymentService.CreatePayment(
 		req.SenderAccount,
@@ -52,8 +40,20 @@ func (h *PaymentHandler) CreatePayment(
 		return nil, err
 	}
 
+	err = h.producer.Publish(&producer.PaymentEvent{
+		PaymentID:       payment.ID,
+		SenderAccount:   req.SenderAccount,
+		ReceiverAccount: req.ReceiverAccount,
+		Amount:          req.Amount,
+	})
+
+	if err != nil {
+		h.paymentService.UpdateStatus(payment.ID, "failed")
+		return nil, err
+	}
+
 	return &pb.CreatePaymentResponse{
 		PaymentId: payment.ID,
-		Status:    payment.Status,
+		Status:    "processing",
 	}, nil
 }
