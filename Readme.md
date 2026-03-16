@@ -106,8 +106,8 @@ Retry policy:
 Kafka is used for decoupled event-driven processing.
 
 Topics used:
-payments
-payments_dlq
+payments  
+payments_dlq  
 
 Dead-letter queue allows recovery and investigation of failed transactions.
 
