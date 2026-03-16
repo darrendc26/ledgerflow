@@ -221,7 +221,7 @@ Go
 ### Setup
 ```bash
 # Clone repository
-git clone <repository-url>
+git clone https://github.com/darrendc26/ledgerflow.git
 cd ledgerflow
 
 ### Start Infrastructure
