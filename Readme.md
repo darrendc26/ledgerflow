@@ -41,10 +41,10 @@ This architecture mirrors patterns used in production systems at large technolog
            PostgreSQL
 
 ## Observability layer
-Application Metrics → Prometheus
+Application Metrics → Prometheus  
 Dashboards → Grafana  
-Tracing → OpenTelemetry
-Trace Visualization → Jaeger
+Tracing → OpenTelemetry  
+Trace Visualization → Jaeger  
 
 ## Core Components
 
@@ -84,8 +84,7 @@ Responsibilities:
 - ensure transactional integrity
 - maintain account balances
 
-Every transaction creates two ledger entries ensuring:
-sum(debits) = sum(credits)
+Every transaction creates two ledger entries ensuring sum(debits) = sum(credits)
 
 ### Payment Worker
 Processes payment events asynchronously from Kafka.
@@ -115,26 +114,26 @@ Dead-letter queue allows recovery and investigation of failed transactions.
 ## Data Model
 
 ### Accounts
-id
-user_id
-balance
-currency
+id  
+user_id  
+balance  
+currency  
 
 ### Payments
-id
-sender_account
-receiver_account
-amount
-currency
-status
-created_at
+id  
+sender_account  
+receiver_account  
+amount  
+currency  
+status  
+created_at  
 
 ### Ledger Entries
-id
-transaction_id
-account_id
-amount
-type
+id  
+transaction_id  
+account_id  
+amount  
+type  
 
 Ledger entry types:
 - debit
@@ -163,25 +162,24 @@ Grafana dashboards visualize:
 - total transactions processed
 
 Example queries:
-rate(payments_processed_total[1m])
-rate(payments_failed_total[5m])
-histogram_quantile(0.95, rate(payment_processing_seconds_bucket[5m]))
-accounts_created_total
+rate(payments_processed_total[1m])  
+rate(payments_failed_total[5m])  
+histogram_quantile(0.95, rate(payment_processing_seconds_bucket[5m]))  
+accounts_created_total  
 
 ### Distributed Tracing
-OpenTelemetry instrumentation tracks requests across services.
+OpenTelemetry instrumentation tracks requests across services.  
 
-Trace example:
+Trace example:  
+process-payment  
+├── kafka-consume  
+├── ledger-transfer  
+└── status-update  
 
-process-payment
-├── kafka-consume
-├── ledger-transfer
-└── status-update
-
-Jaeger provides a visualization interface for tracing.
+Jaeger provides a visualization interface for tracing.  
 
 ## Reliability Features
-The system includes several reliability mechanisms.
+The system includes several reliability mechanisms.  
 
 ### Idempotency
 Duplicate events are ignored using payment status validation.
@@ -196,29 +194,29 @@ Persistent failures are redirected to a dedicated Kafka topic.
 Double-entry ledger guarantees accounting correctness.
 
 ## Infrastructure Stack
-Language:
-Go
+Language:  
+Go  
 
-Infrastructure:
-Kafka
-PostgreSQL
-Docker
+Infrastructure:  
+Kafka  
+PostgreSQL  
+Docker  
 
-Observability:
-Prometheus
-Grafana
-OpenTelemetry
-Jaeger
-
-Communication:
-REST
-gRPC
+Observability:  
+Prometheus  
+Grafana  
+OpenTelemetry  
+Jaeger  
+  
+Communication:  
+REST  
+gRPC  
 
 ## Running the System
-Prerequisites:
-Docker
-Docker Compose
-Go
+Prerequisites:  
+Docker  
+Docker Compose  
+Go  
 
 ### Setup
 ```bash
@@ -308,21 +306,20 @@ done
 Application metrics are exposed at
 http://localhost:2112/metrics
 
-Example output:
-payments_processed_total
-payments_failed_total
-payment_processing_seconds_bucket
+Example output:  
+payments_processed_total  
+payments_failed_total  
+payment_processing_seconds_bucket  
 
 ## Monitoring Interfaces
-Prometheus
-http://localhost:9090
+Prometheus  
+http://localhost:9090  
 
+Grafana  
+http://localhost:3000  
 
-Grafana
-http://localhost:3000
-
-Jaeger
-http://localhost:16686
+Jaeger  
+http://localhost:16686  
 
 ## What This Project Demonstrates
 - event-driven architecture
