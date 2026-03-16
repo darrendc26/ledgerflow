@@ -42,7 +42,7 @@ This architecture mirrors patterns used in production systems at large technolog
 
 ## Observability layer
 Application Metrics → Prometheus
-Dashboards → Grafana
+Dashboards → Grafana  
 Tracing → OpenTelemetry
 Trace Visualization → Jaeger
 
