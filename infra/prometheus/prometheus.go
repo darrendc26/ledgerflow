@@ -9,10 +9,11 @@ import (
 )
 
 type Prometheus struct {
-	registry *prometheus.Registry
-
+	registry          *prometheus.Registry
+	AccountsCreated   prometheus.Counter
 	PaymentsProcessed prometheus.Counter
 	PaymentsFailed    prometheus.Counter
+	PaymentsLatency   prometheus.Histogram
 }
 
 func NewPrometheus() *Prometheus {
@@ -35,20 +36,39 @@ func NewPrometheus() *Prometheus {
 				Help: "Total number of payments failed",
 			},
 		),
+
+		AccountsCreated: prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Name: "accounts_created_total",
+				Help: "Total number of accounts created",
+			},
+		),
 	}
 
 	registry.MustRegister(p.PaymentsProcessed)
 	registry.MustRegister(p.PaymentsFailed)
+	registry.MustRegister(p.AccountsCreated)
 
+	p.PaymentsLatency = prometheus.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "payment_processing_seconds",
+			Help:    "Time taken to process payments",
+			Buckets: prometheus.DefBuckets,
+		},
+	)
+
+	registry.MustRegister(p.PaymentsLatency)
 	return p
 }
 
-func (p *Prometheus) Start() {
+func (p *Prometheus) Start(port string) {
 
-	http.Handle("/metrics", promhttp.HandlerFor(p.registry, promhttp.HandlerOpts{}))
+	mux := http.NewServeMux()
+
+	mux.Handle("/metrics", promhttp.HandlerFor(p.registry, promhttp.HandlerOpts{}))
 
 	go func() {
-		log.Println("Prometheus metrics exposed on :2112/metrics")
-		log.Println(http.ListenAndServe(":2112", nil))
+		log.Println("Prometheus metrics exposed on", port+"/metrics")
+		log.Println(http.ListenAndServe(port, mux))
 	}()
 }

@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"ledgerflow/infra/prometheus"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -24,6 +26,8 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 
 	var req NewAccountRequest
 
+	metrics := prometheus.NewPrometheus()
+	metrics.Start(":2112")
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -42,6 +46,8 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	metrics.AccountsCreated.Inc()
 
 	c.JSON(http.StatusOK, gin.H{
 		"account_id": accountID,

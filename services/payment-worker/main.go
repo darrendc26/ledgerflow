@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 
+	"context"
 	"ledgerflow/pkg/db"
+	"ledgerflow/pkg/telemetry"
 	ledgerpb "ledgerflow/proto/ledgerpb"
 	kafka "ledgerflow/services/payment-service/kafka"
 	payment_service "ledgerflow/services/payment-service/payment_service"
@@ -19,6 +21,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	tp, err := telemetry.InitTracer("payment-worker")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tp.Shutdown(context.Background())
 
 	ledgerClient := ledgerpb.NewLedgerServiceClient(conn)
 	repo := repository.NewPaymentRepository(db.NewPostgresPool())

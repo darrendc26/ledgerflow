@@ -10,7 +10,7 @@ CREATE TABLE accounts (
 
 CREATE TABLE transactions (
     id TEXT PRIMARY KEY,
-    reference_id TEXT,
+    reference_id TEXT UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

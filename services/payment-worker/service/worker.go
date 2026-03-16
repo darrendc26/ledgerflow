@@ -12,6 +12,7 @@ import (
 	service "ledgerflow/services/payment-service/payment_service"
 
 	kafkago "github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
 )
 
 type Worker struct {
@@ -37,17 +38,23 @@ func NewWorker(
 		reader:         reader,
 		ledgerClient:   ledgerClient,
 		paymentService: paymentService,
+		producer:       producer,
 	}
 }
 
 func (w *Worker) Start() {
+
 	metrics := prometheus.NewPrometheus()
-	metrics.Start()
+	metrics.Start(":2113")
+
+	tracer := otel.Tracer("payment-worker")
+
 	for {
+
 		msg, err := w.reader.ReadMessage(context.Background())
 		if err != nil {
 			log.Println("Kafka read error:", err)
-
+			continue
 		}
 
 		var event kafka.PaymentEvent
@@ -55,29 +62,43 @@ func (w *Worker) Start() {
 		err = json.Unmarshal(msg.Value, &event)
 		if err != nil {
 			log.Println("JSON decode error:", err)
+			continue
 		}
 
 		log.Println("Processing payment:", event.PaymentID)
 
+		start := time.Now()
+
+		// create trace span per payment
+		ctx, span := tracer.Start(context.Background(), "process-payment")
+
+		// check payment status (idempotency)
 		paymentStatus, err := w.paymentService.GetPendingPayment(event.PaymentID)
 		if err != nil {
 			log.Println("Payment not found:", err)
+			span.End()
 			continue
 		}
-		// log.Println("Payment status:", paymentStatus)
+
 		if paymentStatus != "created" {
 			log.Println("Payment already processed:", event.PaymentID)
-			break
+			span.End()
+			continue
 		}
 
+		// retry ledger transfer
 		for i := 0; i < 3; i++ {
 
-			_, err = w.ledgerClient.Transfer(context.Background(), &ledgerpb.TransferRequest{
+			ledgerCtx, ledgerSpan := tracer.Start(ctx, "ledger-transfer")
+
+			_, err = w.ledgerClient.Transfer(ledgerCtx, &ledgerpb.TransferRequest{
 				SenderAccount:   event.SenderAccount,
 				ReceiverAccount: event.ReceiverAccount,
 				Amount:          event.Amount,
 				ReferenceId:     event.PaymentID,
 			})
+
+			ledgerSpan.End()
 
 			if err == nil {
 				break
@@ -88,27 +109,44 @@ func (w *Worker) Start() {
 			time.Sleep(2 * time.Second)
 		}
 
+		// failure after retries
 		if err != nil {
-			log.Println("Payment failed:", err)
-			log.Println("Sending to DLQ")
 
-			w.producer.PublishDLQ(&kafka.PaymentEvent{
+			log.Println("Payment failed:", err)
+
+			err := w.producer.PublishDLQ(&kafka.PaymentEvent{
 				PaymentID:       event.PaymentID,
 				SenderAccount:   event.SenderAccount,
 				ReceiverAccount: event.ReceiverAccount,
 				Amount:          event.Amount,
 			})
 
+			if err != nil {
+				log.Println("Failed to publish to DLQ:", err)
+			}
+
+			log.Println("Sent to DLQ")
+
 			w.paymentService.UpdateStatus(event.PaymentID, "failed")
+
 			metrics.PaymentsFailed.Inc()
+
+			span.End()
 			continue
 		}
 
+		// success
 		err = w.paymentService.UpdateStatus(event.PaymentID, "completed")
-		metrics.PaymentsProcessed.Inc()
-		log.Println("Payment completed:", event.PaymentID)
 		if err != nil {
 			log.Println("Failed to update payment status:", err)
 		}
+
+		log.Println("Payment completed:", event.PaymentID)
+
+		metrics.PaymentsProcessed.Inc()
+
+		metrics.PaymentsLatency.Observe(time.Since(start).Seconds())
+
+		span.End()
 	}
 }

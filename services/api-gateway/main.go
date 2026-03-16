@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	// "ledgerflow/infra/prometheus"
 	"ledgerflow/pkg/db"
 	"ledgerflow/services/api-gateway/clients"
 	"ledgerflow/services/api-gateway/handlers"
@@ -14,7 +15,6 @@ import (
 func main() {
 
 	pool := db.NewPostgresPool()
-
 	accountHandler := handlers.NewAccountHandler(pool)
 	depositHandler := handlers.NewDepositHandler(pool)
 	// payment client

@@ -15,39 +15,50 @@ type PaymentEvent struct {
 }
 
 type Producer struct {
-	writer *kafka.Writer
+	paymentWriter *kafka.Writer
+	dlqWriter     *kafka.Writer
 }
 
 func NewProducer() *Producer {
+
 	return &Producer{
-		writer: &kafka.Writer{
+		paymentWriter: &kafka.Writer{
 			Addr:  kafka.TCP("localhost:9092"),
 			Topic: "payments",
+		},
+
+		dlqWriter: &kafka.Writer{
+			Addr:  kafka.TCP("localhost:9092"),
+			Topic: "payments_dlq",
 		},
 	}
 }
 
-func (p *Producer) Publish(paymentEvent *PaymentEvent) error {
-	data, err := json.Marshal(paymentEvent)
+func (p *Producer) Publish(event *PaymentEvent) error {
+
+	data, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
-	return p.writer.WriteMessages(
+
+	return p.paymentWriter.WriteMessages(
 		context.Background(),
 		kafka.Message{
-			Topic: "payments",
 			Value: data,
 		},
 	)
 }
 
-func (p *Producer) PublishDLQ(paymentEvent *PaymentEvent) error {
-	data, _ := json.Marshal(paymentEvent)
+func (p *Producer) PublishDLQ(event *PaymentEvent) error {
 
-	return p.writer.WriteMessages(
+	data, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	return p.dlqWriter.WriteMessages(
 		context.Background(),
 		kafka.Message{
-			Topic: "payments_dlq",
 			Value: data,
 		},
 	)
