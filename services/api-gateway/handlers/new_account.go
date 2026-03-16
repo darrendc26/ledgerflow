@@ -15,19 +15,18 @@ type NewAccountRequest struct {
 }
 
 type AccountHandler struct {
-	db *pgxpool.Pool
+	db      *pgxpool.Pool
+	metrics *prometheus.Prometheus
 }
 
-func NewAccountHandler(db *pgxpool.Pool) *AccountHandler {
-	return &AccountHandler{db: db}
+func NewAccountHandler(db *pgxpool.Pool, metrics *prometheus.Prometheus) *AccountHandler {
+	return &AccountHandler{db: db, metrics: metrics}
 }
 
 func (h *AccountHandler) CreateAccount(c *gin.Context) {
 
 	var req NewAccountRequest
 
-	metrics := prometheus.NewPrometheus()
-	metrics.Start(":2112")
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -47,7 +46,7 @@ func (h *AccountHandler) CreateAccount(c *gin.Context) {
 		return
 	}
 
-	metrics.AccountsCreated.Inc()
+	h.metrics.AccountsCreated.Inc()
 
 	c.JSON(http.StatusOK, gin.H{
 		"account_id": accountID,

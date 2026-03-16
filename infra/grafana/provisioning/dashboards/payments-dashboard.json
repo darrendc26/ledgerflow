@@ -1,0 +1,121 @@
+{
+    "uid": "ledgerflow-payments",
+    "title": "LedgerFlow Payments",
+    "schemaVersion": 42,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "panels": [
+        {
+            "id": 1,
+            "type": "stat",
+            "title": "Accounts Created",
+            "gridPos": {
+                "x": 0,
+                "y": 0,
+                "w": 4,
+                "h": 4
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "refId": "A",
+                    "expr": "accounts_created_total{job=\"api-gateway\"}",
+                    "instant": true
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "type": "stat",
+            "title": "Payments Processed",
+            "gridPos": {
+                "x": 4,
+                "y": 0,
+                "w": 4,
+                "h": 4
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "refId": "A",
+                    "expr": "payments_processed_total{job=\"payment-worker\"}",
+                    "instant": true
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "type": "stat",
+            "title": "Payments Failed",
+            "gridPos": {
+                "x": 8,
+                "y": 0,
+                "w": 4,
+                "h": 4
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "refId": "A",
+                    "expr": "payments_failed_total{job=\"payment-worker\"}",
+                    "instant": true
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "type": "stat",
+            "title": "Payments / Hour",
+            "gridPos": {
+                "x": 12,
+                "y": 0,
+                "w": 4,
+                "h": 4
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "refId": "A",
+                    "expr": "increase(payments_processed_total{job=\"payment-worker\"}[1h])"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "type": "timeseries",
+            "title": "Payment Latency P95",
+            "gridPos": {
+                "x": 0,
+                "y": 4,
+                "w": 16,
+                "h": 8
+            },
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "targets": [
+                {
+                    "refId": "A",
+                    "expr": "histogram_quantile(0.95, rate(payment_processing_seconds_bucket{job=\"payment-worker\"}[5m]))"
+                }
+            ]
+        }
+    ]
+}

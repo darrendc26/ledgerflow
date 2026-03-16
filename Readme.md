@@ -16,11 +16,12 @@ curl -X POST http://localhost:8080/accounts \
 }'
 
 # Deposit
-curl -X POST http://localhost:8080/deposit \
+curl -X POST http://localhost:8080/deposits \
 -H "Content-Type: application/json" \
 -d '{
-  "account_id": "10000000",
-  "amount": 1000
+  "deposit_account": "10000000",
+  "amount": 1000,
+  "currency": "USD"
 }'
 
 # Transfer funds
@@ -39,7 +40,7 @@ curl -X POST http://localhost:8080/payments \
 -d '{
   "sender_account": "10000000",
   "receiver_account": "10000001",
-  "amount": 100,
+  "amount": 100000,
   "currency": "USD"
 }'
 
