@@ -20,25 +20,25 @@ The system includes:
 This architecture mirrors patterns used in production systems at large technology companies.
 
 ## Architecture
-Client
-│
-▼
-API Gateway (Gin REST API)
-│
-▼
-Payment Service (gRPC)
-│
-▼
-Kafka Event Bus
-│
-▼
-Payment Worker
-│
-▼
-Ledger Service (gRPC)
-│
-▼
-PostgreSQL
+            Client
+              │
+              ▼
+    API Gateway (REST - Gin)
+              │
+              ▼
+     Payment Service (gRPC)
+              │
+              ▼
+         Kafka Event Bus
+              │
+              ▼
+         Payment Worker
+              │
+              ▼
+      Ledger Service (gRPC)
+              │
+              ▼
+           PostgreSQL
 
 ## Observability layer
 Application Metrics → Prometheus
@@ -246,6 +246,7 @@ go run services/payment-worker/main.go
 
 ### Testing endpoints with curl
 ```bash
+
 # Create accounts
 curl -X POST http://localhost:8080/accounts \
 -H "Content-Type: application/json" \
