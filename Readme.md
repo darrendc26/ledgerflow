@@ -288,11 +288,12 @@ done
 ```
 
 ## Services
-Service	                URL
-API Gateway	            http://localhost:8080  
-Prometheus	            http://localhost:9090  
-Grafana	                http://localhost:3000  
-Jaeger	                http://localhost:16686  
+| Service       | URL                     |
+|--------------|--------------------------|
+| API Gateway  | http://localhost:8080    |
+| Prometheus   | http://localhost:9090    |
+| Grafana      | http://localhost:3000    |
+| Jaeger       | http://localhost:16686   |
 
 ## What This Project Demonstrates
 - event-driven architecture
