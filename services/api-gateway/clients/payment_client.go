@@ -14,7 +14,7 @@ type PaymentClient struct {
 }
 
 func NewPaymentClient() (*PaymentClient, error) {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	conn, err := grpc.Dial("payment-service:50052", grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

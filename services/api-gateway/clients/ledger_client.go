@@ -14,7 +14,7 @@ type LedgerClient struct {
 }
 
 func NewLedgerClient() (*LedgerClient, error) {
-	conn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	conn, err := grpc.Dial("ledger-service:50051", grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}

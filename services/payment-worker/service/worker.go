@@ -29,7 +29,7 @@ func NewWorker(
 ) *Worker {
 
 	reader := kafkago.NewReader(kafkago.ReaderConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers: []string{"kafka:9092"},
 		Topic:   "payments",
 		GroupID: "payments-group",
 	})

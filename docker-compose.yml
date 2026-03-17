@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+
+  ledger-service:
+    build: .
+    command: ./ledger-service
+    ports:
+      - "50051:50051"   # ✅ FIXED
+    depends_on:
+      - postgres
+      - kafka
+
+  payment-service:
+    build: .
+    command: ./payment-service
+    ports:
+      - "50052:50052"   # ✅ FIXED
+    depends_on:
+      - postgres
+      - kafka
+
+  api-gateway:
+    build: .
+    command: ./api-gateway
+    ports:
+      - "8080:8080"
+      - "2112:2112"
+    depends_on:
+      - payment-service
+      - ledger-service
+
+  payment-worker:
+    build: .
+    command: ./payment-worker
+    ports:
+      - "2113:2113"
+    depends_on:
+      - kafka
+      - postgres
+
+include:
+  - infra/docker-compose.yml

@@ -9,7 +9,7 @@ import (
 func InitTracer(serviceName string) (*trace.TracerProvider, error) {
 	exporter, err := jaeger.New(
 		jaeger.WithCollectorEndpoint(
-			jaeger.WithEndpoint("http:localhost:14268/api/traces"),
+			jaeger.WithEndpoint("http://jaeger:14268/api/traces"),
 		),
 	)
 	if err != nil {

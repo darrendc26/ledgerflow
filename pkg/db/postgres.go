@@ -8,7 +8,7 @@ import (
 )
 
 func NewPostgresPool() *pgxpool.Pool {
-	connStr := "postgres://ledgerflow:ledgerflow@localhost:5432/ledgerflow"
+	connStr := "postgres://ledgerflow:ledgerflow@postgres:5432/ledgerflow?sslmode=disable"
 
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {

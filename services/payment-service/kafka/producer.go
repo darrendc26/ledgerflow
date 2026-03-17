@@ -23,12 +23,12 @@ func NewProducer() *Producer {
 
 	return &Producer{
 		paymentWriter: &kafka.Writer{
-			Addr:  kafka.TCP("localhost:9092"),
+			Addr:  kafka.TCP("kafka:9092"),
 			Topic: "payments",
 		},
 
 		dlqWriter: &kafka.Writer{
-			Addr:  kafka.TCP("localhost:9092"),
+			Addr:  kafka.TCP("kafka:9092"),
 			Topic: "payments_dlq",
 		},
 	}

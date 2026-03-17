@@ -213,7 +213,7 @@ REST
 gRPC  
 
 ## Running the System
-Prerequisites:  
+### Prerequisites:  
 Docker  
 Docker Compose  
 Go  
@@ -224,27 +224,12 @@ Go
 git clone https://github.com/darrendc26/ledgerflow.git
 cd ledgerflow
 
-### Start Infrastructure
-docker compose up -d
-
-### Run Backend Services
-
-# Run the ledger service
-go run services/ledger-service/main.go
-
-# Run the payment service
-go run services/payment-service/main.go
-
-# Run the API gateway
-go run services/api-gateway/main.go
-
-# Run the payment worker
-go run services/payment-worker/main.go
+# Build and Run 
+docker compose up --build  
 ```
 
-### Testing endpoints with curl
+### Testing endpoints with curl 
 ```bash
-
 # Create accounts
 curl -X POST http://localhost:8080/accounts \
 -H "Content-Type: application/json" \
@@ -302,24 +287,12 @@ curl -X POST http://localhost:8080/payments \
 done
 ```
 
-## Metrics Endpoint
-Application metrics are exposed at
-http://localhost:2112/metrics
-
-Example output:  
-payments_processed_total  
-payments_failed_total  
-payment_processing_seconds_bucket  
-
-## Monitoring Interfaces
-Prometheus  
-http://localhost:9090  
-
-Grafana  
-http://localhost:3000  
-
-Jaeger  
-http://localhost:16686  
+## Services
+Service	                URL
+API Gateway	            http://localhost:8080 
+Prometheus	            http://localhost:9090 
+Grafana	                http://localhost:3000
+Jaeger	                http://localhost:16686
 
 ## What This Project Demonstrates
 - event-driven architecture
