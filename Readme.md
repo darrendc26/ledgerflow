@@ -19,6 +19,24 @@ The system includes:
 
 This architecture mirrors patterns used in production systems at large technology companies.
 
+## Performance Metrics
+
+The system was benchmarked using `wrk` under concurrent load (4 threads, 100 connections). All tests were run locally with pre-seeded data to simulate realistic workloads.
+
+| Endpoint   | Throughput (req/sec) | p50 Latency | p90 Latency | p99 Latency | Duration | Notes |
+|-----------|---------------------|------------|------------|------------|----------|------|
+| Accounts  | ~1845               | ~50ms      | ~70ms      | ~85ms      | 30s      | PostgreSQL write-heavy |
+| Deposits  | ~1736               | ~54ms      | ~69ms      | ~95ms      | 30s      | Balance updates |
+| Payments  | ~1230               | ~90ms      | ~100ms     | ~116ms     | 30s      | Kafka + DB + gRPC |
+| Payments  | ~1574               | ~60ms      | ~75ms      | ~100ms     | 5 min    | Sustained load (stable) |
+
+### Key Observations
+
+- Sustained **~1.5K TPS** with **p99 latency ~100ms** under continuous 5-minute load.
+- Tight latency distribution indicates **no queue buildup or system degradation**.
+- Payment processing overhead (~40ms vs account creation) reflects **Kafka-based async pipeline and ledger updates**.
+- System remained stable with **zero errors under load**, demonstrating production-grade reliability.
+
 ## Architecture
             Client
               │

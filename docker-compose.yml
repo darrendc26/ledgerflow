@@ -6,7 +6,7 @@ services:
     build: .
     command: ./ledger-service
     ports:
-      - "50051:50051"   # ✅ FIXED
+      - "50051:50051"   
     depends_on:
       - postgres
       - kafka
@@ -15,7 +15,7 @@ services:
     build: .
     command: ./payment-service
     ports:
-      - "50052:50052"   # ✅ FIXED
+      - "50052:50052"   
     depends_on:
       - postgres
       - kafka
