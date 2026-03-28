@@ -304,6 +304,17 @@ curl -X POST http://localhost:8080/payments \
 }'
 done
 ```
+### Benchmarking
+```bash
+# Accounts
+wrk -t4 -c100 -d30s -s account.lua http://localhost:8080/accounts
+
+# Deposits
+wrk -t4 -c100 -d30s -s deposit.lua http://localhost:8080/deposits
+
+# Payments
+wrk -t4 -c100 -d30s -s payment.lua http://localhost:8080/payments 
+```
 
 ## Services
 | Service       | URL                     |
